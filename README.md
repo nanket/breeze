@@ -4,7 +4,7 @@ A free, open-source SwiftUI app for Macs running macOS 14 or later. It has no de
 
 ## Download
 
-Get the signed, notarized DMG (Apple silicon and Intel) from [nanket.github.io/breeze](https://nanket.github.io/breeze/), or build it yourself as shown below.
+Download the signed, notarized app (Apple silicon and Intel) from [nanket.github.io/breeze](https://nanket.github.io/breeze/) or the [latest release](https://github.com/nanket/breeze/releases/latest). Unzip it and drag Breeze to your Applications folder. You can also build it yourself as shown below.
 
 ![Breeze Smart Scan results: 8.52 GB of junk, 68 large files, 4 unused apps and 10 launch agents](docs/screenshots/scan.jpg)
 
