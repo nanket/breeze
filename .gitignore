@@ -1,0 +1,17 @@
+# Build output
+build/
+.build/
+DerivedData/
+*.xcarchive
+*.dmg
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
+# Local archives and leftovers
+_to_delete/
+*.zip
+*.tgz
+
+.DS_Store
