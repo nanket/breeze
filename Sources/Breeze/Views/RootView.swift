@@ -20,6 +20,7 @@ struct RootView: View {
             .clipped()
         }
         .background(Theme.base)
+        .background(WindowVisibilityReader { model.setOnScreen(window: $0) })
         .ignoresSafeArea()
         .frame(minWidth: 1080, minHeight: 720)
         .preferredColorScheme(.dark)
@@ -53,6 +54,7 @@ struct RootView: View {
             model.refreshPermissions()
             model.stats.refresh()
         }
+        .environment(\.isOnScreen, model.windowOnScreen)
     }
 
     @ViewBuilder private var content: some View {

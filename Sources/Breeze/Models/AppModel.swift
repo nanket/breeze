@@ -40,21 +40,54 @@ final class AppModel {
         return "Checking applications"
     }
 
+    /// Whether the main window and the menu bar panel are really on screen (not closed or covered).
+    private(set) var windowOnScreen = false
+    private(set) var panelOnScreen = false
+    var isLive: Bool { windowOnScreen || panelOnScreen }
+
+    @ObservationIgnored private var statsTask: Task<Void, Never>?
+    @ObservationIgnored private var lastCheckupTry = Date().addingTimeInterval(-29 * 60)   // first try a minute in
+
     init() {
-        // Keep live stats ticking for the dashboard and menu bar, and watch for low disk space.
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(5))
             await self?.updater.checkIfDue()
         }
-        Task { [weak self] in
+        startStatsLoop()
+    }
+
+    /// Called by the main window and the menu bar panel as they come on and off screen.
+    func setOnScreen(window: Bool? = nil, panel: Bool? = nil) {
+        let wasLive = isLive
+        if let window { windowOnScreen = window }
+        if let panel { panelOnScreen = panel }
+        if isLive != wasLive { startStatsLoop() }
+    }
+
+    /// While something is on screen, live stats tick every 5 s (disk space every 30 s).
+    /// Otherwise a quiet 10 s tick only watches for low disk space, so nothing redraws.
+    private func startStatsLoop() {
+        statsTask?.cancel()
+        statsTask = Task { [weak self] in
             var ticks = 0
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2))
                 guard let self else { return }
-                self.stats.refresh()
-                DiskAlerts.check(freeBytes: self.stats.diskFree)
+                let live = self.isLive
+                if live {
+                    // Snap to the new numbers: animating every tick kept the window redrawing non-stop.
+                    var t = Transaction()
+                    t.disablesAnimations = true
+                    withTransaction(t) { self.stats.refresh(disk: ticks % 6 == 0) }
+                    DiskAlerts.check(freeBytes: self.stats.diskFree)
+                } else if ticks % 3 == 0, let d = SystemStats.diskSpace() {
+                    DiskAlerts.check(freeBytes: d.free)
+                }
+                if Date().timeIntervalSince(self.lastCheckupTry) > 30 * 60 {
+                    self.lastCheckupTry = Date()
+                    Task { await self.weeklyCheckupIfDue() }
+                }
                 ticks += 1
-                if ticks % 900 == 30 { await self.weeklyCheckupIfDue() }   // ~every 30 min, starting a minute in
+                try? await Task.sleep(for: .seconds(live ? 5 : 10))
             }
         }
     }

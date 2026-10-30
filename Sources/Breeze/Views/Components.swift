@@ -18,6 +18,93 @@ struct VisualEffectView: NSViewRepresentable {
     func updateNSView(_ v: NSVisualEffectView, context: Context) {}
 }
 
+// MARK: - On-screen tracking
+
+/// Reports whether the window hosting it is really on screen: not closed, minimised, hidden,
+/// covered by other windows, on another Space or behind a locked screen.
+struct WindowVisibilityReader: NSViewRepresentable {
+    let onChange: (Bool) -> Void
+
+    func makeNSView(context: Context) -> ReaderView { ReaderView(onChange: onChange) }
+    func updateNSView(_ v: ReaderView, context: Context) { v.onChange = onChange }
+
+    final class ReaderView: NSView {
+        var onChange: (Bool) -> Void
+        private var observers: [NSObjectProtocol] = []
+        private var last: Bool?
+
+        init(onChange: @escaping (Bool) -> Void) {
+            self.onChange = onChange
+            super.init(frame: .zero)
+        }
+
+        required init?(coder: NSCoder) { fatalError() }
+
+        deinit { observers.forEach(NotificationCenter.default.removeObserver) }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            observers.forEach(NotificationCenter.default.removeObserver)
+            observers = []
+            guard let window else { report(false); return }
+            let names = [NSWindow.didChangeOcclusionStateNotification, NSWindow.willCloseNotification]
+            for name in names {
+                observers.append(NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] n in
+                    self?.report(n.name == NSWindow.willCloseNotification ? false : nil)
+                })
+            }
+            report(nil)
+        }
+
+        private func report(_ forced: Bool?) {
+            let visible = forced ?? window?.occlusionState.contains(.visible) ?? false
+            guard visible != last else { return }
+            last = visible
+            onChange(visible)
+        }
+    }
+}
+
+private struct OnScreenKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    /// False while the window is closed, covered or minimised. Looping animations rest then.
+    var isOnScreen: Bool {
+        get { self[OnScreenKey.self] }
+        set { self[OnScreenKey.self] = newValue }
+    }
+}
+
+/// Plays a looping animation on `flag` while the window is on screen and `active`, and parks it
+/// otherwise. Each animation frame re-lays out the whole window, so a forever loop kept Breeze
+/// at 40–90 % CPU even with its window closed. Idle screens use a few repeats, then rest.
+private struct LoopWhileOnScreen: ViewModifier {
+    @Environment(\.isOnScreen) private var onScreen
+    @Binding var flag: Bool
+    let animation: Animation
+    let active: Bool
+
+    func body(content: Content) -> some View {
+        content.onChange(of: onScreen && active, initial: true) { _, run in
+            if run {
+                withAnimation(animation) { flag = true }
+            } else {
+                var t = Transaction()
+                t.disablesAnimations = true
+                withTransaction(t) { flag = false }
+            }
+        }
+    }
+}
+
+extension View {
+    func loop(_ flag: Binding<Bool>, _ animation: Animation, active: Bool = true) -> some View {
+        modifier(LoopWhileOnScreen(flag: flag, animation: animation, active: active))
+    }
+}
+
 struct GlassCard: ViewModifier {
     var radius: CGFloat = 18
     var padding: CGFloat = 16
@@ -139,9 +226,7 @@ struct HeroGlyph: View {
                 .rotation3DEffect(.degrees(float ? 7 : -7), axis: (x: 1, y: -1, z: 0), perspective: 0.6)
                 .offset(y: float ? -10 : 10)
         }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 3.4).repeatForever(autoreverses: true)) { float = true }
-        }
+        .loop($float, .easeInOut(duration: 3.4).repeatCount(3, autoreverses: true))
     }
 }
 
@@ -198,9 +283,7 @@ struct ActionButton: View {
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.45)
         .onHover { h in withAnimation(.spring(response: 0.3)) { hover = h } }
-        .onAppear {
-            withAnimation(.easeOut(duration: 2.0).repeatForever(autoreverses: false)) { pulse = true }
-        }
+        .loop($pulse, .easeOut(duration: 2.0).repeatCount(3, autoreverses: false), active: enabled)
     }
 }
 
@@ -457,6 +540,7 @@ extension IntroScreen where Footer == EmptyView {
 struct ScanningRing: View {
     let module: Module
     var diameter: CGFloat = 210
+    @Environment(\.isOnScreen) private var onScreen
     @State private var spin = false
 
     var body: some View {
@@ -481,12 +565,10 @@ struct ScanningRing: View {
             Image(systemName: module.icon)
                 .font(.system(size: diameter * 0.26, weight: .semibold))
                 .foregroundStyle(module.gradient)
-                .symbolEffect(.pulse)
+                .symbolEffect(.pulse, isActive: onScreen)
         }
         .frame(width: diameter, height: diameter)
-        .onAppear {
-            withAnimation(.linear(duration: 1.3).repeatForever(autoreverses: false)) { spin = true }
-        }
+        .loop($spin, .linear(duration: 1.3).repeatForever(autoreverses: false))
     }
 }
 

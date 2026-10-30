@@ -34,11 +34,12 @@ final class SystemStats {
 
     init() { refresh() }
 
-    func refresh() {
-        let root = URL(fileURLWithPath: "/")
-        if let v = try? root.resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey]) {
-            diskTotal = Int64(v.volumeTotalCapacity ?? 0)
-            diskFree = v.volumeAvailableCapacityForImportantUsage ?? 0
+    /// Disk space is the slow part (about 10 ms for the "important usage" figure), so the live
+    /// tick skips it most of the time. Anything that just freed space refreshes with `disk: true`.
+    func refresh(disk: Bool = true) {
+        if disk, let d = Self.diskSpace() {
+            diskTotal = d.total
+            diskFree = d.free
         }
         memUsed = Self.memoryUsed()
         uptime = ProcessInfo.processInfo.systemUptime
@@ -59,6 +60,13 @@ final class SystemStats {
             netUp = n.tx >= last.tx ? Double(n.tx - last.tx) / dt : 0
         }
         lastNet = (n.rx, n.tx, now)
+    }
+
+    nonisolated static func diskSpace() -> (total: Int64, free: Int64)? {
+        var root = URL(fileURLWithPath: "/")
+        root.removeAllCachedResourceValues()
+        guard let v = try? root.resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey]) else { return nil }
+        return (Int64(v.volumeTotalCapacity ?? 0), v.volumeAvailableCapacityForImportantUsage ?? 0)
     }
 
     /// Matches Activity Monitor's "Memory Used": app memory + wired + compressed.

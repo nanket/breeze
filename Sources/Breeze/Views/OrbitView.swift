@@ -149,8 +149,9 @@ struct OrbitView: View {
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.stroke))
         .onAppear {
             withAnimation(.spring(response: 1.1, dampingFraction: 0.86)) { appear = 1 }
-            withAnimation(.linear(duration: 60).repeatForever(autoreverses: false)) { spin = true }
         }
+        // The orbit turns while a folder is being measured and rests once the map is drawn.
+        .loop($spin, .linear(duration: 60).repeatForever(autoreverses: false), active: model.lens.loading)
     }
 
     private func fill(for seg: OrbitSegment, inner: CGFloat, outer: CGFloat) -> some ShapeStyle {

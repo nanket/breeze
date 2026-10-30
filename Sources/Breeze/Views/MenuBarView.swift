@@ -83,6 +83,7 @@ struct MenuBarPanel: View {
         .padding(16)
         .frame(width: 320)
         .background(ModuleBackground(module: .smartScan))
+        .background(WindowVisibilityReader { model.setOnScreen(panel: $0) })
         .preferredColorScheme(.dark)
     }
 

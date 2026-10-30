@@ -289,8 +289,8 @@ struct OnboardingView: View {
         }
         .onAppear {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { appear = true }
-            withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) { pulse = true }
         }
+        .loop($pulse, .easeInOut(duration: 1.4).repeatForever(autoreverses: true), active: !granted)
         .task {
             // Poll until access shows up, then celebrate.
             while !Task.isCancelled && !granted {

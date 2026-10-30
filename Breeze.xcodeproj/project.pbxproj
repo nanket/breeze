@@ -259,8 +259,8 @@
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				CODE_SIGN_ENTITLEMENTS = Resources/Breeze.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				MARKETING_VERSION = 1.4;
-				CURRENT_PROJECT_VERSION = 6;
+				MARKETING_VERSION = 1.4.1;
+				CURRENT_PROJECT_VERSION = 7;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 			}; name = Debug; };
@@ -277,8 +277,8 @@
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				CODE_SIGN_ENTITLEMENTS = Resources/Breeze.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				MARKETING_VERSION = 1.4;
-				CURRENT_PROJECT_VERSION = 6;
+				MARKETING_VERSION = 1.4.1;
+				CURRENT_PROJECT_VERSION = 7;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 			}; name = Release; };
