@@ -192,6 +192,11 @@ extension AppModel {
             score -= min(10, Double(dev.staleSize) / 1e9)
             issues.append(.init(icon: "chevron.left.forwardslash.chevron.right", text: "\(Fmt.bytes(dev.staleSize)) in idle project builds", module: .devCleanup))
         }
+        if running.loaded, !running.idleRuntimes.isEmpty {
+            let idle = running.idleRuntimes
+            score -= min(8, Double(idle.count) * 3)
+            issues.append(.init(icon: "moon.zzz", text: "\(idle.count) dev runtime\(idle.count == 1 ? "" : "s") idle for 6+ hours", module: .running))
+        }
         return HealthReport(score: Int(max(0, min(100, score)).rounded()), issues: issues)
     }
 }

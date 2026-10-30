@@ -70,6 +70,7 @@ struct RootView: View {
         case .updater: AppUpdatesView()
         case .duplicates: DuplicatesView()
         case .uninstaller: UninstallerView()
+        case .running: RunningView()
         case .optimization: LaunchAgentsView()
         case .maintenance: MaintenanceView()
         }

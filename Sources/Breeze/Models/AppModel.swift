@@ -24,6 +24,7 @@ final class AppModel {
     var crashReport: URL? = CrashReports.newReport()
     let apps = UninstallerModel()
     let agents = LaunchAgentsModel()
+    let running = RunningModel()
     let maintenance = MaintenanceModel()
     let stats = SystemStats()
 
@@ -139,6 +140,7 @@ final class AppModel {
         case .devCleanup: return dev.phase == .results && dev.totalSize > 0 ? Fmt.bytes(dev.totalSize) : nil
         case .duplicates: return dupes.phase == .results && !dupes.groups.isEmpty ? "\(dupes.groups.count)" : nil
         case .uninstaller: return apps.loaded ? "\(apps.apps.count)" : nil
+        case .running: return running.loaded && !running.idleRuntimes.isEmpty ? "\(running.idleRuntimes.count) idle" : nil
         case .optimization: return agents.loaded ? "\(agents.items.count)" : nil
         case .maintenance: return nil
         }

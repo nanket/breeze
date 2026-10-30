@@ -24,7 +24,7 @@ enum Theme {
 }
 
 enum Module: String, CaseIterable, Identifiable {
-    case smartScan, junk, devCleanup, largeFiles, duplicates, spaceLens, organizer, security, privacy, uninstaller, updater, optimization, maintenance
+    case smartScan, junk, devCleanup, largeFiles, duplicates, spaceLens, organizer, security, privacy, uninstaller, updater, running, optimization, maintenance
 
     var id: String { rawValue }
 
@@ -41,6 +41,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .privacy: "Privacy"
         case .updater: "Updater"
         case .uninstaller: "Uninstaller"
+        case .running: "Running"
         case .optimization: "Launch Agents"
         case .maintenance: "Maintenance"
         }
@@ -59,6 +60,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .privacy: "hand.raised"
         case .updater: "arrow.down.app"
         case .uninstaller: "xmark.app"
+        case .running: "waveform.path.ecg"
         case .optimization: "gauge.with.dots.needle.67percent"
         case .maintenance: "wrench.and.screwdriver"
         }
@@ -77,6 +79,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .privacy: [Color(hex: 0xA18CD1), Color(hex: 0xFBC2EB)]
         case .updater: [Color(hex: 0x00C9FF), Color(hex: 0x92FE9D)]
         case .uninstaller: [Color(hex: 0xFF6B8B), Color(hex: 0xC44BFF)]
+        case .running: [Color(hex: 0x5EFCE8), Color(hex: 0x736EFE)]
         case .optimization: [Color(hex: 0xFFE066), Color(hex: 0xFF9F43)]
         case .maintenance: [Color(hex: 0x7DE2FC), Color(hex: 0xB9A6FF)]
         }
@@ -97,7 +100,7 @@ struct SidebarSection: Hashable {
         SidebarSection(title: "Files", modules: [.largeFiles, .duplicates, .spaceLens, .organizer]),
         SidebarSection(title: "Protection", modules: [.security, .privacy]),
         SidebarSection(title: "Applications", modules: [.uninstaller, .updater]),
-        SidebarSection(title: "Speed", modules: [.optimization, .maintenance]),
+        SidebarSection(title: "Speed", modules: [.running, .optimization, .maintenance]),
     ]
 }
 
